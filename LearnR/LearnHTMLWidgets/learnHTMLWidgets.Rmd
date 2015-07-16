@@ -1,0 +1,143 @@
+---
+title: "Learn HTMLWidget"
+author: "Ko, Kuei Yueh"
+date: "Thursday, July 16, 2015"
+output: html_document
+---
+```{r}
+setwd("C:\\Users\\clinton\\GitHub\\CodeLearn\\LearnR")
+```
+
+# Install and Import the libraries
+```{r}
+#library(devtools)
+# time seires charting
+#install_github("rstudio/dygraphs")
+# DataTables
+#install_github("rstudio/DT")
+# Leaflet maps
+#install_github("rstudio/leaflet")
+# network graphs by D3
+#install.packages("networkD3")
+# 3D scatterplots and globe (three.js)
+#install_github("bwlewis/rthreejs")
+# 3D scatterplots, lines and bars (MetricsGraphics.js)
+#install_github("hrbrmstr/metricsgraphics")
+# Interactive Heatmaps (d3heatmap)
+#install_github("rstudio/d3heatmap")
+# DigrammeR
+#install_github("rich-iannone/DiagrammeR")
+```
+
+Note:  
+The below tutorial is from
+http://www.htmlwidgets.org/
+https://www.youtube.com/watch?v=dV4gtARPvu8
+
+# Leaflet
+http://rstudio.github.io/leaflet/
+
+Leaflet is a JavaScript library for creating dynamic maps that support panning and zooming along with various annotations like markers, polygons, and popups.
+
+Tutorial from htmlwidgets.org
+```{r}
+library(leaflet)
+orstationc <- read.csv("C:/Users/clinton/GitHub/CodeLearn/LearnR/data/orstationc.csv")
+
+pal <- colorQuantile("YlOrRd", NULL, n=8)
+leaflet(orstationc) %>%
+    addTiles %>%
+    addCircleMarkers(color = ~pal(tann))
+```
+
+# Dygraphs
+http://rstudio.github.io/dygraphs
+
+Dygraphs provides rich facilities for charting time-series data in R and includes support for many interactive features including series/point highlighting, zooming, and panning.
+
+Tutorial from htmlwidgets.org
+```{r}
+library(dygraphs)
+dygraph(nhtemp, main="New Haven Temperatures") %>%
+    dyRangeSelector(dateWindow = c("1920-01-01", "1960-01-01"))
+```
+
+# MetricsGraphics
+http://hrbrmstr.github.io/metricsgraphics/
+
+MetricsGraphics enables easy creation of D3 scatterplots, line charts, and histograms.
+
+Tutorial from htmlwidgets.org
+```{r}
+library(metricsgraphics)
+mjs_plot(mtcars, x=wt, y=mpg) %>%
+  mjs_point(color_accessor=carb, size_accessor=carb) %>%
+  mjs_labs(x="Weight of Car", y="Miles per Gallon")
+```
+
+# NetworkD3
+http://christophergandrud.github.io/networkD3/
+
+networkD3 provides tools for creating D3 JavaScript network graphs from R.
+
+Tutorial from htmlwidgets.org
+```{r}
+library(networkD3)
+data(MisLinks, MisNodes)
+forceNetwork(Links = MisLinks, Nodes = MisNodes, Source = "source",
+             Target = "target", Value = "value", NodeID = "name",
+             Group = "group", opacity = 0.4)
+```
+
+# d3Heatmap
+https://github.com/rstudio/d3heatmap
+
+Interactive heatmaps with D3 including support for row/column highlighting and zooming.
+
+Tutorial from htmlwidgets.org
+```{r}
+library(d3heatmap)
+d3heatmap(mtcars, scale="column", colors="Blues")
+```
+
+# DataTables
+http://rstudio.github.io/DT/
+
+DataTables displays R matrices or data frames as interactive HTML tables that support filtering, pagination, and sorting.
+
+Tutorial from htmlwidgets.org
+```{r}
+library(DT)
+datatable(iris, options = list(pageLength = 5))
+```
+
+# threejs
+https://github.com/bwlewis/rthreejs
+
+threejs includes a 3D scatterplot and 3D globe (you can directly manipulate the scatterplot below with the mouse).
+
+Tutorial from htmlwidgets.org
+```{r}
+library(threejs)
+z <- seq(-10, 10, 0.01)
+x <- cos(z)
+y <- sin(z)
+scatterplot3js(x,y,z, color=rainbow(length(z)))
+```
+
+# DiagrammeR
+http://rich-iannone.github.io/DiagrammeR/
+
+A tool for creating diagrams and flowcharts using Graphviz and Mermaid.
+
+Tutorial from htmlwidgets.org
+```{r}
+library(DiagrammeR)
+grViz("
+  digraph {
+    layout = twopi
+    node [shape = circle]
+    A -> {B C D} 
+  }")
+```
+
