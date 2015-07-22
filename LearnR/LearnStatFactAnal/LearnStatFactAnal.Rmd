@@ -1,0 +1,60 @@
+---
+title: "Factor Analysis in R"
+author: "Ko, Kuei Yueh"
+date: "Wednesday, July 22, 2015"
+output: html_document
+---
+
+# Set up Environment
+The tutorial is from the web link:  
+http://rtutorialseries.blogspot.tw/2011/10/r-tutorial-series-exploratory-factor.html
+```{r}
+setwd("C:\\Users\\clinton\\GitHub\\CodeLearn\\LearnR\\LearnStatFactAnal")
+#install.packages("psych")
+library(psych)
+```
+
+Exploratory factor analysis (EFA) is a common technique in the social sciences for explaining the variance between several measured variables as a smaller set of latent variables. EFA is often used to consolidate survey data by revealing the groupings (factors) that underly individual questions. This will be the context for demonstration in this tutorial.
+
+# Data Exploration
+Read and view the data
+```{r}
+data <- read.csv("C:\\Users\\clinton\\GitHub\\CodeLearn\\LearnR\\data\\dataset_exploratoryFactorAnalysis.csv")
+head(data)
+```
+
+Principal component analysis to view the 
+```{r}
+pcal <- princomp(data)
+plot(pcal$sdev)
+abline(h=1, col='red')
+```
+
+From the squared eigenvalues in this of the PCA result, we could guess that there are two factors in this data.
+
+# Factor Analysis using psych package
+There are several parameters for function fa() from psych package:  
+- r: the correlation matrix  
+- nfactors: number of factors to be extracted (default = 1)  
+- rotate: one of several matrix rotation methods, such as "varimax" or "oblimin"  
+- fm: one of several factoring methods, such as "pa" (principal axis) or "ml" (maximum likelihood)  
+
+Note that several rotation and factoring methods are available when conducting EFA. Rotation methods can be described as orthogonal, which do not allow the resulting factors to be correlated, and oblique, which do allow the resulting factors to be correlated. Factoring methods can be described as common, which are used when the goal is to better describe data, and component, which are used when the goal is to reduce the amount of data. The fa() function is used for common factoring. For component analysis, see princomp(). The best methods will vary by circumstance and it is therefore recommended that you seek professional council in determining the optimal parameters for your future EFAs.
+
+In this tutorial, we will use oblique rotation (rotate = "oblimin"), which recognizes that there is likely to be some correlation between students' latent subject matter preference factors in the real world. We will use principal axis factoring (fm = "pa"), because we are most interested in identifying the underlying constructs in the data.
+```{r}
+# solution of fa()
+#install.packages("GPArotation")
+faSol <- fa(cor(data), nfactors=2, rotate="oblimin", fm="pa")
+```
+
+Observe the result
+```{r}
+faSol
+```
+
+
+
+
+
+
