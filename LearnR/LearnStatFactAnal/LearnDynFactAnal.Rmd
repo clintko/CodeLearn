@@ -5,7 +5,7 @@ date: "Thursday, July 23, 2015"
 output: html_document
 ---
 
-
+# set up environment
 ```{r}
 #install.packages("mvtnorm")
 #install.packages("MARSS")
@@ -13,6 +13,7 @@ library(dygraphs)
 library(MARSS)
 ```
 
+# data import and description
 We will analyze some of the Lake Washington plankton data included in the
 MARSS package. This dataset includes 33 years of monthly counts for 13
 plankton species along with data on water temperature, total phosphorous
@@ -25,29 +26,47 @@ covariate data, we will only examine 10 years of data (1980-1989).
 data(lakeWAplankton)
 ```
 
+we want lakeWAplanktonTrans, which has been transformed, so the 0s are replaced with NAs and the data z-scored.
 ```{r}
-nhtemp
-
-temp <- matrix(dat[,"Temp"], ncol=12)
-rownames(temp) <- unique(dat[,"Year"])
-colnames(temp) <- 1:12
-
-temp <- ts(data=temp, start=1962, end=1994, frequency=12)
-temp
-dygraph(temp, main = "Lake Temperatures")
-?
+dat = lakeWAplanktonTrans
 ```
 
-
+dat is a 396 x 20 matrix type variable.
 ```{r}
-# we want lakeWAplanktonTrans, which has been transformed
-# so the 0s are replaced with NAs and the data z-scored
-dat = lakeWAplanktonTrans
+class(dat)
+```
+
+The data contains
+```{r}
+#colnames(dat)
+```
+"Year"                    "Month"                  
+"Temp"                    "TP"                     
+"pH"                      "Cryptomonas"            
+"Diatoms"                 "Greens"                 
+"Bluegreens"              "Unicells"               
+"Other.algae"             "Conochilus"             
+"Cyclops"                 "Daphnia"                
+"Diaptomus"               "Epischura"              
+"Leptodora"               "Neomysis"               
+"Non.daphnid.cladocerans" "Non.colonial.rotifers"  
+
+Since each column of the data is standardize, the mean and sd of each column is zero 0 and 1.
+```{r}
+apply(dat[,c(-1:-2)], 2, function(x){mean(x, na.rm=TRUE)})
+apply(dat[,c(-1:-2)], 2, function(x){sd(x, na.rm=TRUE)})
+```
+
+For rows, only ten years from 1980 ~ 1989 are analyzed.
+For colnumns, only "Cryptomonas", "Diatoms", "Greens", "Unicells", and "Other.algae" are picked. The result data dat.spp.1980 contain 120 time points and 5 features.
+```{r}
 # use only the 10 years from 1980-1989
 plankdat = dat[dat[,"Year"]>=1980 & dat[,"Year"]<1990,]
+
 # create vector of phytoplankton group names
 phytoplankton = c("Cryptomonas", "Diatoms", "Greens",
 "Unicells", "Other.algae")
+
 # get only the phytoplankton
 dat.spp.1980 = plankdat[,phytoplankton]
 ```
@@ -57,9 +76,228 @@ length.
 ```{r}
 # transpose data so time goes across columns
 dat.spp.1980 = t(dat.spp.1980)
+
 # get number of time series
-N.ts = dim(dat.spp.1980)[1]
+N.ts = dim(dat.spp.1980)[1] # there are 5 features
+
 # get length of time series
-TT = dim(dat.spp.1980)[2]
+TT = dim(dat.spp.1980)[2]   # there are 120 time points
 ```
+
+It is normal in this type of analysis to standardize each time series by ???rst
+subtracting its mean and then dividing by its standard deviation (i.e., create a z-score y_t^* with mean = 0 and SD = 1)
+
+
+£U is a diagonal matrix with the standard deviations of each time series along
+the diagonal, and ¡Ây is a vector of the means. In R, this can be done as follows
+```{r}
+Sigma = sqrt(apply(dat.spp.1980, 1, var, na.rm=TRUE))
+y.bar = apply(dat.spp.1980, 1, mean, na.rm=TRUE)
+dat.z = (dat.spp.1980 - y.bar) * (1/Sigma)
+rownames(dat.z) = rownames(dat.spp.1980)
+```
+
+# Visualize the data
+```{r}
+par(mfrow=c(3, 2))
+plot(dat.spp.1980[1, ], pch=19, type="b", main="Cryptomonas")
+plot(dat.spp.1980[2, ], pch=19, type="b", main="Diatoms")
+plot(dat.spp.1980[3, ], pch=19, type="b", main="Greens")
+plot(dat.spp.1980[4, ], pch=19, type="b", main="Unicells")
+plot(dat.spp.1980[5, ], pch=19, type="b", main="Other.algae")
+plot(dat.spp.1980[1, ], pch=19, type="b", main="Cryptomonas")
+```
+
+# Setting up the model in MARSS
+```{r}
+Z.vals = list(
+    "z11",    0,     0,
+    "z21", "z22",    0,
+    "z31", "z32", "z33",
+    "z41", "z42", "z43",
+    "z51", "z52", "z53")
+
+Z = matrix(Z.vals, nrow=N.ts, ncol=3, byrow=TRUE)
+```
+
+The Q and B matrices are both set equal to the identity matrix using
+diag().
+```{r}
+Q=B=diag(1, 3)
+```
+
+and each of the ri,i elements is a di???erent parameter to be estimated. We can
+also specify this R structure using a list matrix as follows:
+```{r}
+R.vals = list(
+"r11",0,0,0,0,
+0,"r22",0,0,0,
+0,0,"r33",0,0,
+0,0,0,"r44",0,
+0,0,0,0,"r55")
+R = matrix(R.vals, nrow=N.ts, ncol=N.ts, byrow=TRUE)
+```
+
+This form of variance-covariance matrix is commonly used, and therefore
+MARSS has a built-in shorthand for this structure. Alternatively, we could
+simply type: 
+    R = "diagonal and unequal"
+
+As mentioned in earlier chapters, there are other shorthand notations for many
+of the common parameter structures. Type ?MARSS at the R command line
+to see a list of the shorthand options for each parameter vector/matrix.
+The parameter vectors £k (termed x0 in MARSS), a and u are each set to
+be a column vector of zeros. Either of the following can be used:
+```{r}
+x0 = U = matrix(0, nrow=3, ncol=1)
+A = matrix(0, nrow=6, ncol=1)
+x0 = U = A = "zero"
+```
+
+The £N matrix (termed V0 in MARSS) is a diagonal matrix with 5¡¦s along
+the diagonal:
+```{r}
+V0 = diag(5,3)
+```
+
+Finally, we make a list of the model parameters to pass to the MARSS()
+function and set the control list:
+```{r}
+dfa.model = list(Z=Z, A="zero", R=R, B=B, U=U, Q=Q, x0=x0, V0=V0)
+cntl.list = list(maxit=50)
+```
+
+# fitting the model
+```{r}
+kemz.3 = MARSS(dat.z, model=dfa.model, control=cntl.list)
+```
+
+```{r}
+par(mfrow=c(3, 2))
+plot(dat.spp.1980[1, ], pch=20, type="b", main="Cryptomonas")
+points(kemz.3$marss$data[1,], pch=20, col="blue")
+
+plot(dat.spp.1980[2, ], pch=20, type="b", main="Diatoms")
+points(kemz.3$marss$data[2,], pch=20, col="blue")
+
+plot(dat.spp.1980[3, ], pch=20, type="b", main="Greens")
+points(kemz.3$marss$data[3,], pch=20, col="blue")
+
+plot(dat.spp.1980[4, ], pch=20, type="b", main="Unicells")
+points(kemz.3$marss$data[4,], pch=20, col="blue")
+
+plot(dat.spp.1980[5, ], pch=20, type="b", main="Other.algae")
+points(kemz.3$marss$data[5,], pch=20, col="blue")
+
+plot(dat.spp.1980[1, ], pch=20, type="b", main="Cryptomonas")
+points(kemz.3$marss$data[1,], pch=20, col="blue")
+```
+
+# Using model selection to determine the number of trends
+Following Zuur et al. (2003), we use model selection criteria (speci???cally AICc) to determine the number of underlying trends that have the highest data support. Our ???rst model had three underlying trends (m = 3). Let¡¦s compare this to a model with two underlying trends. The forms for parameter matrix R and vector a will stay the same but we need to change the other parameter vectors and matrices because m is di???erent.
+
+After showing you the matrix math behind a DFA model, we will now
+use the form argument for a MARSS call to specify that we want to ???t a
+DFA model. This will set up the Z matrix and the other parameters for you.
+Specify how many trends you want by passing in model=list(m=x). You can
+also pass in di???erent forms for the R matrix in the usual way.
+
+Here is how to ???t two trends using form="dfa":
+```{r}
+model.list = list(m=2, R="diagonal and unequal")
+kemz.2 = MARSS(
+    dat.spp.1980, 
+    model=model.list,
+    z.score=TRUE, 
+    form="dfa", 
+    control=cntl.list)
+```
+
+and compare its AICc value to that from the 3-trend model.
+```{r}
+print(
+    cbind(
+        model=c("3 trends", "2 trends"),
+        AICc=round(c(kemz.3$AICc, kemz.2$AICc))
+    ),
+    quote=FALSE)
+```
+
+# Comparing many model structures
+Now let¡¦s examine a larger suite of possible models. We will test from one to four underlying trends (m = 1 to 4) and four di???erent structures for the R matrix:
+    1. same variances & no covariance ( ¡¥¡¥ diagonal and equal ¡¦¡¦ );
+    2. di???erent variances & no covariance ( ¡¥¡¥ diagonal and unequal ¡¦¡¦ );
+    3. same variances & same covariance ( ¡¥¡¥ equalvarcov ¡¦¡¦ ); and
+    4. di???erent variances & covariances ( ¡¥¡¥ unconstrained ¡¦¡¦ ).
+    
+The following code builds our model matrices; you could also write out each
+matrix as we did in the ???rst example, but this allows us to build and run all of the models together. (NOTE: the following piece of code will take a very long time to run!)
+```{r}
+# set new control params
+cntl.list = list(minit=200, maxit=5000, allow.degen=FALSE)
+```
+
+```{r}
+# set up forms of R matrices
+levels.R = c("diagonal and equal",
+"diagonal and unequal",
+"equalvarcov",
+"unconstrained")
+model.data = data.frame()
+```
+
+```{r}
+# fit lots of models & store results
+# NOTE: this will take a long time to run!
+for(R in levels.R) {
+    for(m in 1:(N.ts-1)) {
+        dfa.model = list(A="zero", R=R, m=m)
+        
+        kemz = MARSS(dat.z, model=dfa.model, 
+                     control=cntl.list,
+                     form="dfa", z.score=TRUE)
+        
+        model.data = rbind(model.data,
+                           
+        data.frame(R=R,
+                   m=m,
+                   logLik=kemz$logLik,
+                   K=kemz$num.params,
+                   AICc=kemz$AICc,
+                   stringsAsFactors=FALSE))
+        assign(paste("kemz", m, R, sep="."), kemz)
+    } # end m loop
+} # end R loop
+```
+
+# Using varimax rotation to determine the loadings and trends
+As Harvey (1989, p. 450) discusses in section 8.5.1, there are multiple equivalent solutions to the dynamic factor loadings. We arbitrarily constrained Z in such a way to choose only one of these solutions, but fortunately the di???erent solutions are equivalent, and they can be related to each other by a rotation matrix H. Let H be any m ¡Ñ m non-singular matrix. The following are then equivalent solutions:
+
+There are many ways of doing factor rotations, but a common approach is
+the varimax rotation which seeks a rotation matrix H that creates the largest di???erence between loadings. For example, let¡¦s say there are three trends in our model. In our estimated Z matrix, let¡¦s say row 3 is (0.2,0.2,0.2). That would mean that data series 3 is equally described by trends 1, 2, and 3. If instead row 3 was (0.8,0.1,0.1), this would make interpretation easier because we could say that data time series 3 was mostly described by trend 1. The varimax rotation ???nds the H matrix that makes the Z rows more like (0.8,0.1,0.1) and less like (0.2,0.2,0.2).
+
+The varimax rotation is easy to compute because R has a built in function
+for this. To do so, we ???rst get the model ???ts from the highest ranked model.
+```{r}
+# get the "best" model
+best.model = model.tbl[1,]
+fitname = paste("kemz",best.model$m,best.model$R,sep=".")
+best.fit = get(fitname)
+```
+
+Next, we retrieve the matrix used for varimax rotation.
+```{r}
+# get the inverse of the rotation matrix
+H.inv = varimax(coef(best.fit, type="matrix")$Z)$rotmat
+```
+
+Finally, we use H???1 to rotate the factor loadings and H to rotate the trends
+as in Equation 9.10.
+```{r}
+# rotate factor loadings
+Z.rot = coef(best.fit, type="matrix")$Z %*% H.inv
+# rotate trends
+trends.rot = solve(H.inv) %*% best.fit$states
+```
+
 

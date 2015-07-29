@@ -1,0 +1,48 @@
+---
+title: "Grouped Aggregation with tapply and dplyr"
+author: "Ko, Kuei Yueh"
+date: "Tuesday, July 28, 2015"
+output: html_document
+---
+
+# set the environment
+```{r}
+library(dplyr)
+```
+
+How can we quickly and easily calculate summary statistics over groups of variables in R? For example, if you have a dataset of calorie counts for different items at McDonalds, how can you calculate the mean number of calories separately for desserts and sandwiches?
+
+Note that the tutorial is from the website
+https://rstudio-pubs-static.s3.amazonaws.com/46399_ae360f3ec8644c9d9892994a12b0df8d.html
+
+Let・s walk through how to do this using the ChickWeight dataset. Here・s how the dataset looks:    
+```{r}
+head(ChickWeight)
+```
+
+# tapply()
+Let・s say we want to calculate the mean weight across all chicks separately for each time point. Here, our critical DV is weight and our grouping variable is time.
+```{r}
+Mean.Weights <- with(
+    ChickWeight, 
+    tapply(X = weight,  # X is the critical DV
+           INDEX = Time, # INDEX is the grouping variable
+           FUN = mean # FUN is the aggregation function
+))
+```
+
+As you can see, the output of the tapply() function is an array of mean weights aggregated at each time period. When we plot the data, we can clearly see that (unsurprisingly) the mean weight of chicks increases over time.
+```{r}
+Mean.Weights
+```
+
+You can put ANY function you want into the FUN argument as long as it takes a single vector as an argument and returns a single number. This function can either be a function pre-defined by R (like mean, median, sd, etc.) or a custom function that you define.
+
+tapply is great for quickly looking at the result of a single function applied to groups on a single variable, but what if you want to apply several functions to several different variables in a dataframe? For example, say you want to calculate both the mean weight and the standard deviation of weights and the mean of another variable such as the chicken・s height.
+
+You could do this using several tapply() functions, but this would be cumbersome. Instead, we can utilize the almightly dplyr package!
+
+# dplyr and pipelining (%>%)
+Pipelining with dplyr allows you to simultaneously calculate several summary variables and save the results in a dataframe.
+
+First, let me add a new column titled Height to ChickWeight that gives the height of the chicks
