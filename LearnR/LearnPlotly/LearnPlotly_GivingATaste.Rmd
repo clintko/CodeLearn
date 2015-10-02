@@ -1,0 +1,82 @@
+---
+title: "Learn Plotly: Giving a Taste"
+author: "Ko, Kuei Yueh"
+date: "Saturday, September 12, 2015"
+output: html_document
+---
+
+The practice is from the following website  
+http://www.r-bloggers.com/3d-plots-with-ggplot2-and-plotly/
+
+# install the package
+```{r}
+#install.packages("Rcpp")
+#install.packages("devtools")
+#library(devtools)
+#install_github("ropensci/plotly")  # plotly is part of ropensci
+```
+
+# Get Started
+To connect to the plotly web platform, the username and key must be first set.  
+(https://plot.ly/r/getting-started/)
+```{r}
+library(plotly)
+
+# set the username and key in R
+Sys.setenv("plotly_username"="clintko")
+Sys.setenv("plotly_api_key"="wzlp2ee5mi")
+```
+
+# Start plotting
+The figure below is from the link  
+http://blog.plot.ly/post/106630252117/plot-with-ggplot2-and-plotly-within-knitr-reports
+```{r}
+p <- plot_ly(economics, x = date, y = uempmed, 
+             filename="LearnPlotly/economics_dat_uempmed")
+p
+```
+
+#----------------------------------------------------------
+The figures in this section is from the link: "https://plot.ly/r/"
+
+create the data
+```{r}
+set.seed(100)
+d <- diamonds[sample(nrow(diamonds), 1000), ]
+head(d)
+```
+
+plot the carat vs price
+```{r}
+plot_ly(d, x = carat, y = price, 
+        text = paste("Clarity: ", clarity),
+        mode = "markers", 
+        color = carat, 
+        size = carat,
+        filename="LearnPlotly/diamonds_carat_vs_price")
+```
+
+replot the scatterplot with ggplot
+```{r}
+qplot(carat, price, data=d, colour=clarity)
+ggplotly(filename="LearnPlotly/diamonds_carat_vs_price_ggplot")
+```
+
+replot using ggplot function. Stratefy the data using the colnames "cut" and plot the scatter plot using geomPoint. Fianlly, fit each data with loess in geomSmooth.
+```{r}
+p <- ggplot(data = d, aes(x = carat, y = price)) +
+  geom_point(aes(text = paste("Clarity:", clarity)), size = 4) +
+  geom_smooth(aes(colour = cut, fill = cut)) + facet_wrap(~ cut)
+
+(gg <- ggplotly(p, filename="LearnPlotly/diamonds_curveFitting"))
+```
+
+the plotly support the 3D plot as well (which is the main reason I learn plotly)
+```{r}
+plot_ly(d, x=carat, y=price, z=depth, 
+        type = "scatter3d", mode = "markers", 
+        marker = list(size = 2), 
+        filename="LearnPlotly/diamonds_3DPlot_carat_price_depth")
+```
+
+

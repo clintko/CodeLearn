@@ -1,0 +1,43 @@
+---
+title: "Untitled"
+author: "Ko, Kuei Yueh"
+date: "Tuesday, September 15, 2015"
+output: html_document
+---
+
+```{r}
+library(tidyr)
+library(dplyr)
+```
+
+```{r}
+messy <- data.frame(
+    name = c("Wilbur", "Petunia", "Gregory"),
+    a = c(67, 80, 64),
+    b = c(56, 90, 50)
+)
+messy
+```
+
+```{r}
+messy %>%
+  gather(drug, heartrate, a:b)
+```
+
+```{r}
+messy <- data.frame(
+  id = 1:4,
+  trt = sample(rep(c('control', 'treatment'), each = 2)),
+  work.T1 = runif(4),
+  home.T1 = runif(4),
+  work.T2 = runif(4),
+  home.T2 = runif(4)
+)
+messy
+```
+
+```{r}
+messy %>%
+    gather(key, time, -id, -trt)
+```
+
