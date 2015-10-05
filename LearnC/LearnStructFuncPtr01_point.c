@@ -19,9 +19,39 @@ int main(){
     //Pixel* point_ptr = &point;
     //point_ptr->print(point_ptr);
 
-    Pixel* point = Pixel_init(10, 20);
-    point->print(point);
+    Point* pixel = Point_init(10, 20);
+    printf("Initialization\n");
+    pixel->print(pixel);
 
-    free(point);
+    printf("Set the point to (5, 10)\n");
+    pixel->set(pixel, 5, 10);
+    pixel->print(pixel);
+
+    printf("Reset the point\n");
+    pixel->reset(pixel);
+    pixel->print(pixel);
+
+    printf("Move Left by one\n");
+    pixel->moveLeft(pixel);
+    pixel->print(pixel);
+
+    printf("Move Rigth by one\n");
+    pixel->moveRight(pixel);
+    pixel->print(pixel);
+
+    printf("Move Up by one\n");
+    pixel->moveUp(pixel);
+    pixel->print(pixel);
+
+    printf("Move Down by one\n");
+    pixel->moveDown(pixel);
+    pixel->print(pixel);
+    
+    pixel->set(pixel, 123, 456);
+    printf("The current point\nx: %d\ny: %d\n",
+	   pixel->getX(pixel), pixel->getY(pixel));
+
+    // free the memory
+    free(pixel);
     return 0;
 }
