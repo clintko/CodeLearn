@@ -1,5 +1,5 @@
-/**/
-#include "LearnStructFuncPtr01_point.h"
+/* NTU_ComputeThink Midterm Project */
+//#include "LearnStructFuncPtr01_point.h"
 
 char pic_gun01[4][21]=
     {"  __n-___      ____ "
@@ -20,23 +20,25 @@ char *fig_gun01;
 // define structure
 typedef struct Fig{
     // attributes
-    Point* pos;
-    int height;
-    int width;
+    Point* pos;    // the position of the figure
+    int height;    // height of the figure
+    int width;     // width of the figure
     int frame_tot; // total number of frame(pictures)
     int frame_cur; // the current frame(pictures)
-    char** pic;
+    char** pic;    // the 2d array of char;
+                   // each row stores a frame(pictures)
+                   // the number of rows is the total number of frame(pictures)
 
     // method
-    void (*print)(struct Fig*);
-    int (*getX)(struct Fig*);
-    int (*getY)(struct Fig*);
-    int (*getHeight)(struct Fig*);
-    int (*getWidth)(struct Fig*);
-    int (*moveUp)(struct Fig*);
-    int (*moveDown)(struct Fig*);
-    int (*moveLeft)(struct Fig*);
-    int (*moveRight)(struct Fig*);
+    void (*print)(struct Fig*);     // print out the current frame
+    int (*getX)(struct Fig*);       // Getter Method; get x coordinate
+    int (*getY)(struct Fig*);       // Getter Method; get y coordinate
+    int (*getHeight)(struct Fig*);  // Getter Method; get figure height
+    int (*getWidth)(struct Fig*);   // Getter Method; get figure width
+    int (*moveUp)(struct Fig*);     // shift the picture one step up
+    int (*moveDown)(struct Fig*);   // shift the picture one step down
+    int (*moveLeft)(struct Fig*);   // shift the picture one step left
+    int (*moveRight)(struct Fig*);  // shift the picture one step right
     int (*check)(struct Fig*, struct Point*);
 
 }Fig;
