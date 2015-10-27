@@ -41,13 +41,17 @@ typedef struct Fig{
                                      // get the current index of frame
     void (*setX)(struct Fig*, int);  // Setter Method; set x coordinate
     void (*setY)(struct Fig*, int);  // Setter Method; set y coordinate
-    void (*reset)(struct Fig*);      // reset the figure to the origin
+    void (*setFrameCur)(struct Fig*, int);// Setter Method; set current Frame Index
+    void (*reset)(struct Fig*);      // reset figure position to origin
+    void (*resetFrameCur)(struct Fig*);   // reset current frame index to zero
     int (*moveUp)(struct Fig*);      // shift the picture one step up
     int (*moveDown)(struct Fig*);    // shift the picture one step down
     int (*moveLeft)(struct Fig*);    // shift the picture one step left
     int (*moveRight)(struct Fig*);   // shift the picture one step right
     //void (*addPic)(struct Fig*, char*); // add picture to the figure
     void (*addPic)(struct Fig*self, int height, int width, char pic[height][width+1]);
+    void (*nextPic)(struct Fig*);    // shift to the next picture
+    char (*getChar)(struct Fig*, struct Point*); 
     int (*check)(struct Fig*, struct Point*);
     void (*freeFig)(struct Fig*);    // free the memory of Fig
     
@@ -64,13 +68,17 @@ int Fig_getFrameTot(Fig*);
 int Fig_getFrameCur(Fig*);
 void Fig_setX(Fig*, int);
 void Fig_setY(Fig*, int);
+void Fig_setFrameCur(Fig*, int);
 void Fig_reset(Fig*);
+void Fig_resetFrameCur(Fig*);
 int Fig_moveUp(Fig*);
 int Fig_moveDown(Fig*);
 int Fig_moveLeft(Fig*);
 int Fig_moveRight(Fig*);
 //void Fig_addPic(Fig*, char*);
 void Fig_addPic(Fig* self, int height, int width, char pic[height][width+1]);
+void Fig_nextPic(Fig* self);
+char Fig_getChar(Fig*, Point*);
 int Fig_check(Fig*, Point*);
 int Fig_isPointInFig(Fig*, Point*);
 void Fig_free(Fig*);
@@ -107,12 +115,16 @@ Fig* Fig_init(int x, int y, int height, int width){
     self->getFrameCur = Fig_getFrameCur;
     self->setX = Fig_setX;
     self->setY = Fig_setY;
+    self->setFrameCur = Fig_setFrameCur;
     self->reset = Fig_reset;
+    self->resetFrameCur = Fig_resetFrameCur;
     self->moveUp = Fig_moveUp;
     self->moveDown = Fig_moveDown;
     self->moveLeft = Fig_moveLeft;
     self->moveRight = Fig_moveRight;
     self->addPic = Fig_addPic;
+    self->nextPic = Fig_nextPic;
+    self->getChar = Fig_getChar;
     self->check = Fig_check;
     self->freeFig = Fig_free;
     
@@ -174,10 +186,20 @@ void Fig_setY(Fig *self, int y){
     self->pos->setY(self->pos, y);
 }
 
+void Fig_setFrameCur(Fig *self, int idx){
+    /* Setter method; set the current frame index */
+    self->frame_cur = idx;
+}
+
 void Fig_reset(Fig *self){
-    /* reset the figure to the origin */
+    /* reset the figure position to the origin */
     self->setX(self, 0);
     self->setY(self, 0);
+}
+
+void Fig_resetFrameCur(Fig *self){
+    /* reset the current frame index to zero */
+    self->frame_cur = 0;
 }
 
 int Fig_moveUp(Fig *self){
@@ -230,6 +252,17 @@ void Fig_addPic(Fig* self, int height, int width, char pic[height][width+1]){
     
     // increment the total frame
     self->frame_tot += 1;
+}
+
+void Fig_nextPic(Fig* self){
+    /* shift to the next frame */
+    self->frame_cur = (self->frame_cur + 1) % self->frame_tot;
+}
+
+char Fig_getChar(Fig* self, Point* point){
+    /* get the character from the 2d picture, which is 
+       indicated by current frame index */
+    return self->pic[ self->frame_cur ][ point->getY(point) * self->width + point->getX(point) ];
 }
 
 int Fig_check(Fig* fig, Point* point){

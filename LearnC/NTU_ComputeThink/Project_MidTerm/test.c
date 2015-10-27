@@ -175,21 +175,38 @@ void testStructFig(){
     
     fig01->setY(fig01, 55);
     if(fig01->getY(fig01) == 55){
-	printf("    test22: getY; Passed\n");
+	printf("    test22: setY; Passed\n");
     }else{
-	printf("    test22: getY; Failed\n");
+	printf("    test22: setY; Failed\n");
     } // end if-else
 
+    fig01->setFrameCur(fig01, 10);
+    if(fig01->getFrameCur(fig01) == 10){
+	printf("    test23: setFrameCur; Passed\n");
+    }else{
+	printf("    test23: setFrameCur; Failed\n");
+    } // end if-else
+
+    
     // -----------------------------------------
     printf("Check Method reset\n");
-    fig01->reset(fig01);
     
+    fig01->reset(fig01);
     if((fig01->getX(fig01) == 0) && (fig01->getY(fig01) == 0)){
 	printf("    test31: reset; Passed\n");
     }else{
 	printf("    test31: reset; Failed\n");
     } // end if-else
-    
+
+    fig01->frame_cur = 10;
+    fig01->resetFrameCur(fig01);
+    if(fig01->getFrameCur(fig01) == 0){
+	printf("    test32: resetFrameCur; Passed\n");
+    }else{
+	printf("    test32: resetFrameCur; Failed\n");
+    } // end if-else
+
+        
     // ------------------------------------------
     printf("Check Method move\n");
     
@@ -307,14 +324,72 @@ void testStructFig(){
     } // end if-else
     
     // ------------------------------------------
-    printf("Check Method get\n");
+    printf("Check Method nextPic\n");
     
+    fig01->resetFrameCur(fig01);
+    fig01->nextPic(fig01);
+    if (fig01->getFrameCur(fig01) == 1){
+	printf("    test71: nextPic; Passed\n");
+    } else {
+	printf("    test71: nextPic; Failed\n");
+    } // end if-else
+
+    fig01->nextPic(fig01);
+    if (fig01->getFrameCur(fig01) == 0){
+	printf("    test72: nextPic; Passed\n");
+    } else {
+	printf("    test72: nextPic; Failed\n");
+    }
+    // ------------------------------------------
+    printf("Check Method getChar\n");
+    Point *pixel = Point_init(0, 0);
+    fig01->resetFrameCur(fig01);
+    if (fig01->getChar(fig01, pixel) == 'A'){
+	printf("    test81: getChar; Passed\n");
+    } else {
+	printf("    test81: getChar; Failed\n");
+    } // end if-else
+
+    pixel->reset(pixel);
+    fig02->resetFrameCur(fig02);
+    if (fig02->getChar(fig02, pixel) == 'A'){
+	printf("    test82: getChar; Passed\n");
+    } else {
+	printf("    test82: getChar; Failed\n");
+    } // end if-else
+
+    pixel->moveRight(pixel);
+    if (fig02->getChar(fig02, pixel) != 'A'){
+	printf("    test83: getChar; Passed\n");
+    } else {
+	printf("    test83: getChar; Failed\n");
+    } // end if-else
+    
+    if (fig02->getChar(fig02, pixel) == 'B'){
+	printf("    test83: getChar; Passed\n");
+    } else {
+	printf("    test83: getChar; Failed\n");
+    } // end if-else
+
+    pixel->moveDown(pixel);
+    if (fig02->getChar(fig02, pixel) == 'D'){
+	printf("    test84: getChar; Passed\n");
+    } else {
+	printf("    test84: getChar; Failed\n");
+    } // end if-else
+    
+    pixel->moveLeft(pixel);
+    if (fig02->getChar(fig02, pixel) == 'C'){
+	printf("    test85: getChar; Passed\n");
+    } else {
+	printf("    test85: getChar; Failed\n");
+    } // end if-else
+    
+    pixel->freePoint(pixel);
     // ------------------------------------------
     printf("Check Method Print\n");
-
-    // ------------------------------------------
-    printf("Check Method nextPic\n");
-
+    
+    
     // ------------------------------------------
     printf("Check Method isPointInFig\n");
 
